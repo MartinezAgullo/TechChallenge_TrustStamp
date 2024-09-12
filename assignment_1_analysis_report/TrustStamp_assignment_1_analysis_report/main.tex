@@ -1,0 +1,160 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{subcaption}  
+
+
+\usepackage[a4paper, margin=1in, top=0.5in]{geometry}  % Adjust top margin here
+
+\title{Analysis Report: Age Assignment Model Comparison \\ Trust Stamp Assignment}
+\author{Pablo Martínez-Agulló}
+\date{September 2024}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+Hanut, an online retailer, wants to enhance customer experiences by personalizing them based on age demographics. After exploring image-based age estimation solutions, they have shortlisted two models and are seeking our analysis to determine which model to adopt. Their consumer age profiles are segmented into specific brackets: 0-12, 13-15, 16-17, 18-24, 25-30, 31-40, 41-50, 51-60, 61-70, 71-80, and 81+.
+
+The two shortlisted models are:
+\begin{itemize}
+    \item \textbf{Model 1}
+    \begin{itemize}
+        \item Predicts an age range, given as \texttt{age\_min} and \texttt{age\_max}.
+        \item Data available in \texttt{data/model\_1.csv}, containing 6975 entries.
+    \end{itemize}
+    
+    \item \textbf{Model 2}
+    \begin{itemize}
+        \item Provides a direct age prediction labeled as \texttt{age}.
+        \item Data available in \texttt{data/model\_2.csv}, containing 6969 entries.
+    \end{itemize}
+\end{itemize}
+
+The actual age data is stored in \texttt{data/gt.csv} with 8644 entries. Both models' datasets contain some missing entries when compared to the ground truth data. After merging the three datasets, the comparison is conducted on 6957 complete entries, with missing data removed.
+
+\section{Data Exploration}
+
+%\begin{table}[h]
+%\centering
+%\begin{tabular}{|c|c|c|c|c|}
+%\hline
+%\textbf{real\_age} & \textbf{model\_1\_age\_min} & \textbf{model\_1\_age\_max} & %\textbf{model\_2\_age} & \textbf{model\_1\_age\_avg} \\ \hline
+%31.248095   & 27.082076   & 34.397298   & 30.985482   & 30.739687   \\ \hline
+%\end{tabular}
+%\caption{Mean values for real and predicted ages from Model 1 and Model 2.}
+%\end{table}
+
+
+Figure~\ref{fig:Scatter} reveals a trend where both models underestimate age as the real age increases. The $R^2$ value suggests a linear relationship, particularly for Model 1. In all figures, the predictions for Model 1 are represented by the average of \texttt{age\_min} and \texttt{age\_max}. 
+
+The horizontal alignment of points for Model 2 (blue) on Figure~\ref{fig:Scatter} indicates that its predictions might be discretized to specific values instead of providing more granular continuous predictions. The low $R^2$ score of Model 2 may be caused by this.
+
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/0_Scatter_Real_vs_prediction_Refined_dropNan_A.png}
+        \caption{Scatter plot of predicted age for both models as a function of the real age.}
+        \label{fig:Scatter}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/3_Box_Real_vs_prediction_dorpnan_DensePlotGrid.png}
+        \caption{Box plot of the average predicted age of Models 1 and 2 as a function of the age bracket. The numbers on the boxes correspond to the model's average.}
+        \label{fig:Box}
+    \end{minipage}
+\end{figure}
+
+
+
+Figure~\ref{fig:Box} shows the predicted age of each model across different real age brackets. While both models tend to overestimate the age for younger brackets and underestimate for older ones, Model 1 generally aligns more closely with actual ages (see Table~\ref{tab:bars}).
+It is important to note that while the average prediction for certain age brackets may align with true values, this does not necessarily imply strong model performance. The alignment may result from overestimations and underestimations canceling each other out, as suggested by the distribution of errors in Figure~\ref{fig:Scatter}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c|c}
+\textbf{Age Bin} & \textbf{Model 1} & \textbf{Model 2} \\ \hline
+0-12    & ok              & ok              \\ 
+13-15   & overestimated   & overestimated   \\ 
+16-17   & overestimated   & overestimated   \\ 
+18-24   & ok              & overestimated   \\ 
+25-30   & ok              & ok              \\ 
+31-40   & ok              & ok              \\ 
+41-50   & ok              & ok              \\ 
+51-60   & ok              & underestimated  \\ 
+61-70   & ok              & underestimated  \\ 
+71-80   & underestimated  & underestimated  \\ 
+81+     & underestimated  & underestimated  \\ 
+\end{tabular}
+\caption{Comparison of Model 1 and Model 2 across different age bins.}
+\label{tab:bars}
+\end{table}
+
+To quantify the models' performance, we evaluate the discrepancy between the true age and predicted values using mean squared error (MSE), mean absolute percentage error (MAPE), and symmetric mean absolute percentage error (SMAPE). MSE emphasizes larger errors, MAPE provides percentage-based insights, and SMAPE offers a symmetric evaluation of errors. As shown in Figure~\ref{fig:metrics}, Model 1 consistently yields lower error rates across all metrics, outperforming Model 2 across all age groups.
+
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/4_MSE.png}
+        %\caption{Mean squared error}
+        \caption{MSE}
+        \label{fig:mse}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/4_MAPE.png}
+        %\caption{Mean absolute percentage error}
+        \caption{MAPE}
+        \label{fig:mape}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/4_SMAPE.png}
+        %\caption{Symmetric mean absolute percentage error}
+        \caption{SMAPE}
+        \label{fig:smape}
+    \end{subfigure}
+    \caption{Most common metrics to asses the accuracy of a model.}
+    \label{fig:metrics}
+\end{figure}
+
+
+%\begin{table}[h]
+%\centering
+%%\resizebox{\textwidth}{!}{  % This resizes the table to fit the page width
+%\begin{tabular}{l|c c| c c| c c}
+%\multirow{2}{*}{\textbf{Age Bracket}} & \multicolumn{2}{c}{\textbf{MSE}} & \multicolumn{2}{c}{\textbf{MAPE}}  & \multicolumn{2}{c}{\textbf{SMAPE}} \\ %\cline{2-7} %\hline 
+%                             & Model 1    & Model 2    & Model 1     & Model 2    & Model 1     & Model 2     \\ \hline 
+%0-12                         & 9.08       & 24.76      & 37.43       & 84.45      & 31.48       & 44.65       \\
+%13-15                        & 21.96      & 34.73      & 25.80       & 32.39      & 22.11       & 26.12       \\
+%16-17                        & 20.56      & 38.98      & 21.11       & 29.00      & 18.20       & 23.61       \\
+%18-24                        & 18.33      & 34.54      & 15.58       & 23.18      & 14.12       & 20.32       \\
+%25-30                        & 19.98      & 29.13      & 12.32       & 14.40      & 12.17       & 13.71       \\
+%31-40                        & 31.54      & 36.30      & 12.37       & 13.57      & 13.01       & 14.30       \\
+%41-50                        & 45.95      & 64.17      & 11.67       & 13.78      & 12.48       & 15.17       \\
+%51-60                        & 44.72      & 78.37      & 9.17        & 12.14      & 9.71        & 13.49       \\
+%61-70                        & 61.06      & 116.33     & 9.27        & 13.22      & 9.99        & 14.74       \\
+%71-80                        & 108.10     & 204.98     & 10.96       & 16.73      & 11.96       & 18.75       \\
+%81+                          & 161.57     & 374.38     & 12.70       & 20.63      & 13.84       & 23.43         
+%\end{tabular}
+%%}
+%\caption{Comparison of Model 1 and Model 2 performance across different age brackets using MSE, MAPE, R², and SMAPE.}
+%\end{table}
+
+
+
+\section{Conclusion}
+This analysis demonstrates that both models exhibit similar trends in overestimating younger consumers' ages and underestimating older consumers' ages. However, Model 1, which provides age range predictions, consistently performs better across age groups than Model 2, which directly predicts ages.
+
+Evaluation using MSE, MAPE, and SMAPE metrics confirms that Model 1 achieves lower error rates across all age brackets. Notably, Model 1's performance is less affected by extreme age groups, suggesting greater robustness in diverse age scenarios. Model 2, in contrast, shows significant underestimation for older age groups, which diminishes its utility for personalized experiences in such demographics.
+
+Given these results, Model 1 is recommended for Hanut's age-based customer segmentation. Its superior performance across multiple metrics makes it the more reliable option for age prediction across all age brackers. Future work should focus on refining the models to reduce misestimations at extreme ages and incorporating additional demographic data for improved predictive accuracy.
+\end{document}
